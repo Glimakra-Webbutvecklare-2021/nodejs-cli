@@ -22,6 +22,7 @@ Usage:
     todoCompleted: (todo) => chalk.green(`'${todo.title}' has been completed`),
     todosCleared: chalk.green(`Completed todos has been cleared`),
     noTodosCleared: chalk.blue(`No todos are completed`),
+    alreadyCompleted: (todo) => chalk.blue(`'${todo.title}' has already been completed`),
     unknownError: chalk.red("Something went wrong"),
     commandNotSupportedError: chalk.red("Command not supported. App is exiting."),
     askTodoTitle: "Type your new todo: "
@@ -63,6 +64,12 @@ const todoController = {
         if (idx < 0 || idx >= allTodos.length) {
             console.log(todoViews.todoNumberInvalid);
             process.exit(1);
+        }
+
+        const todo = allTodos[idx];
+        if(todo.completed) {
+            console.log(todoViews.alreadyCompleted(todo));
+            return true;
         }
 
         // Update specified todo via model
