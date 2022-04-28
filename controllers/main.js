@@ -10,13 +10,22 @@ export const todoController = {
             output: process.stdout
         });
 
+        // Start questioning user for todo title
+        // function to handle what happens next...
         rl.question(todoViews.askTodoTitle, function(todoTitle) {
+            // Save todo via model
             const success = todoModel.addTodo(todoTitle);
+
+            // if unsuccessful send a message to user
             if (!success) {
                 console.log(todoViews.unknownError);
                 return;
             }
+
+            // if successful we let user know todo was saved
             console.log(todoViews.todoSaved);
+
+            // Close interface session
             rl.close();
         })
     },
@@ -31,7 +40,7 @@ export const todoController = {
        console.log(view);
     },
     completeTodo: function (todoNumber) {
-        // SANTIY CHECK 
+        // Sanity check: make sure todo number exits
         const idx = Number(todoNumber) - 1;
         const allTodos = todoModel.getTodos();
         if (idx < 0 || idx >= allTodos.length) {
@@ -39,6 +48,7 @@ export const todoController = {
             process.exit(1);
         }
 
+        // Sanity check: make todo has not already been completed
         const todo = allTodos[idx];
         if(todo.completed) {
             console.log(todoViews.alreadyCompleted(todo));
@@ -59,8 +69,10 @@ export const todoController = {
         return true;
     },
     clearCompletedTodos: function () {
+        // Ask model to clear all completed todos
         const numOfCompleted = todoModel.clearCompletedTodos();
 
+        // Notify user how many todos has been cleared
         console.log(
             numOfCompleted > 0 ? 
             todoViews.todosCleared : 

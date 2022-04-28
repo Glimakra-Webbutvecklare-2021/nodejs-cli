@@ -1,38 +1,46 @@
 import fs from 'fs';
 
+const dbPath = "./todo-live-db.json";
+
 export const todoModel = {
     getTodos: function() {
-        return JSON.parse(fs.readFileSync("./todo-live-db.json", 'utf-8'));
+        return JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
     },
-    saveTodos: function(todos) {},
+    saveTodos: function(todos) {
+        return fs.writeFileSync(dbPath, JSON.stringify(todos));
+    },
     addTodo: function(title) {
         // Create new todo
         const newTodo = {title: title, completed: false};
 
         // Retreive current state of DB as Javascript array
-        // const allTodos = JSON.parse(fs.readFileSync("./todo-live-db.json", 'utf-8'));
         const allTodos = this.getTodos();
+
         // Update Javascript array with new todo
         allTodos.push(newTodo);
 
         // Write new state to DB
-        fs.writeFileSync("./todo-live-db.json", JSON.stringify(allTodos));
+        this.saveTodos(allTodos);
         
         return true;
     },
     completeTodo: function(idx) {
-        // const allTodos = JSON.parse(fs.readFileSync("./todo-live-db.json", 'utf-8'));
         const allTodos = this.getTodos();
+
+        // Make sure the selected todo is completed
         allTodos[idx].completed = true;
-        fs.writeFileSync("./todo-live-db.json", JSON.stringify(allTodos));
+        
+        // Save new state
+        this.saveTodos(allTodos);
         return true;
     },
     clearCompletedTodos: function() {
-        // const allTodos = JSON.parse(fs.readFileSync("./todo-live-db.json", 'utf-8'));
         const allTodos = this.getTodos();
         const completedTodos = allTodos.filter(todo => todo.completed); 
         const uncompletedTodos = allTodos.filter(todo => !todo.completed); 
-        fs.writeFileSync("./todo-live-db.json", JSON.stringify(uncompletedTodos));
+        this.saveTodos(uncompletedTodos);
+
+        // Return the amount of compeleted todos that was cleared
         return completedTodos.length;
     },
 };
