@@ -1,6 +1,8 @@
 import chalk from "chalk";
 import fs from 'fs';
+import readline from 'readline';
 
+// VIEWS
 export const todoViews = {
     usage: `Welcome to Todo app
 Usage:
@@ -20,12 +22,29 @@ Usage:
     todoCompleted: (todo) => chalk.green(`'${todo.title}' has been completed`),
     todosCleared: chalk.green(`Completed todos has been cleared`),
     noTodosCleared: chalk.blue(`No todos are completed`),
-    unknownError: chalk.red("Something went wrong")
+    unknownError: chalk.red("Something went wrong"),
+    commandNotSupportedError: chalk.red("Command not supported. App is exiting."),
+    askTodoTitle: "Type your new todo: "
 };
 
+// CONTROLLER
 const todoController = {
     createTodo: function () {
+        // Ask user what the new todo is called
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
 
+        rl.question(todoViews.askTodoTitle, function(todoTitle) {
+            const success = todoModel.addTodo(todoTitle);
+            if (!success) {
+                console.log(todoViews.unknownError);
+                return;
+            }
+            console.log(todoViews.todoSaved);
+            rl.close();
+        })
     },
     getTodosView: function () {
        // Get all todos from DB
@@ -56,11 +75,11 @@ const todoController = {
         }
 
         // Everything went well
-        console.log(todoViews.todoSaved);
+        console.log(todoViews.todoCompleted(allTodos[idx]));
         return true;
     },
     clearCompletedTodos: function () {
-        const numOfCompleted = todoModel.clearTodos();
+        const numOfCompleted = todoModel.clearCompletedTodos();
 
         console.log(
             numOfCompleted > 0 ? 
@@ -73,6 +92,7 @@ const todoController = {
     }
 };
 
+// MODEL
 const todoModel = {
     getTodos: function() {
         return JSON.parse(fs.readFileSync("./todo-live-db.json", 'utf-8'));
@@ -98,9 +118,9 @@ const todoModel = {
         const allTodos = this.getTodos();
         allTodos[idx].completed = true;
         fs.writeFileSync("./todo-live-db.json", JSON.stringify(allTodos));
-        return false;
+        return true;
     },
-    clearTodos: function() {
+    clearCompletedTodos: function() {
         // const allTodos = JSON.parse(fs.readFileSync("./todo-live-db.json", 'utf-8'));
         const allTodos = this.getTodos();
         const completedTodos = allTodos.filter(todo => todo.completed); 
@@ -111,9 +131,43 @@ const todoModel = {
 };
 
 // TESTING
-todoController.getTodosView();
-todoController.clearCompletedTodos();
-todoController.getTodosView();
+// todoController.getTodosView();
+// todoController.createTodo();
+// todoController.getTodosView();
+
+// MAIN PROGRAM
+// MVC type is: CONTROLLER
+// ROUTER
+const currentCommand = process.argv[2]; // undefined
+const currentTodoNumber = process.argv[3];
+const supportedCommands = ['new', 'get', 'complete', 'clear', 'help'];
+
+// check if currentCommand exists AND is not included in Supported Commands Array
+if (currentCommand && !supportedCommands.includes(currentCommand)) {
+    console.log(todoViews.commandNotSupportedError);
+    process.exit(1);
+} 
+
+switch (currentCommand) {
+    case 'new':
+        todoController.createTodo();
+        break;
+    case 'get':
+        todoController.getTodosView();
+        break;
+    case 'complete':
+        todoController.completeTodo(currentTodoNumber);
+        break;
+    case 'clear':
+        todoController.clearCompletedTodos();
+        break;
+    case 'help':
+        todoController.printUsage();
+        break;
+    default:
+        todoController.printUsage();
+        break;
+}
 
 
 
